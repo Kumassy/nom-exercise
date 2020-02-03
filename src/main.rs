@@ -1,12 +1,12 @@
 use nom::{
   IResult,
   branch::alt,
-  combinator::map_res,
+  combinator::{map_res, opt},
   character::complete::char,
   bytes::complete::tag,
   character::complete::{digit1 as digit, space0 as space},
   multi::fold_many0,
-  sequence::{delimited, pair}
+  sequence::{delimited, pair, tuple}
 };
 
 // Parser definition
@@ -32,7 +32,7 @@ fn parens(i: &str) -> IResult<&str, i64> {
 // we fallback to the parens parser defined above
 fn factor(i: &str) -> IResult<&str, i64> {
   alt((
-    map_res(delimited(space, digit, space), FromStr::from_str),
+    map_res(delimited(space, tuple((opt(tag("-")), digit)), space), FromStr::from_str),
     parens
   ))(i)
 }
@@ -103,6 +103,11 @@ fn parens_test() {
     expr("  2*2 / ( 5 - 1) + 3"),
     Ok(("", 4))
   );
+}
+
+#[test]
+fn unary_minus() {
+    assert_eq!(expr(" -1"), Ok(("", -1)));
 }
 
 
