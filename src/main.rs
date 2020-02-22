@@ -26,13 +26,25 @@ fn parens(i: &str) -> IResult<&str, i64> {
   )(i)
 }
 
+
+fn parse_digit(i: &str) -> IResult<&str, i64> {
+  let (rest, res) = tuple((opt(tag("-")), map_res(digit, FromStr::from_str)))(i)?;
+  let d = match res {
+    (Some(_), d) => d * -1,
+    (None, d) => d
+  };
+
+  Ok((rest, d))
+}
+
 // We transform an integer string into a i64, ignoring surrounding whitespaces
 // We look for a digit suite, and try to convert it.
 // If either str::from_utf8 or FromStr::from_str fail,
 // we fallback to the parens parser defined above
 fn factor(i: &str) -> IResult<&str, i64> {
   alt((
-    map_res(delimited(space, tuple((opt(tag("-")), digit)), space), FromStr::from_str),
+    // map_res(delimited(space, tuple((opt(tag("-")), digit)), space), FromStr::from_str),
+    delimited(space, parse_digit, space),
     parens
   ))(i)
 }
@@ -108,6 +120,9 @@ fn parens_test() {
 #[test]
 fn unary_minus() {
     assert_eq!(expr(" -1"), Ok(("", -1)));
+    assert_eq!(expr("-65 + 1 - (-2)"), Ok(("", -62)));
+    assert_eq!(expr("-65 + 1 - -2"), Ok(("", -62)));
+    assert_eq!(expr("1 - -1"), Ok(("", 2)));
 }
 
 
