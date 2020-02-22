@@ -28,7 +28,7 @@ fn parens(i: &str) -> IResult<&str, i64> {
 
 
 fn parse_digit(i: &str) -> IResult<&str, i64> {
-  let (rest, res) = tuple((opt(tag("-")), map_res(digit, FromStr::from_str)))(i)?;
+  let (rest, res) = tuple((delimited(space, opt(tag("-")), space), map_res(digit, FromStr::from_str)))(i)?;
   let d = match res {
     (Some(_), d) => d * -1,
     (None, d) => d
@@ -120,9 +120,9 @@ fn parens_test() {
 #[test]
 fn unary_minus() {
     assert_eq!(expr(" -1"), Ok(("", -1)));
-    assert_eq!(expr("-65 + 1 - (-2)"), Ok(("", -62)));
+    assert_eq!(expr("-65 + 1 - (- 2)"), Ok(("", -62)));
     assert_eq!(expr("-65 + 1 - -2"), Ok(("", -62)));
-    assert_eq!(expr("1 - -1"), Ok(("", 2)));
+    assert_eq!(expr("1 - - 1"), Ok(("", 2)));
 }
 
 
